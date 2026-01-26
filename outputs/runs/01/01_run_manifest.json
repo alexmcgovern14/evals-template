@@ -1,0 +1,63 @@
+{
+  "run_id": "01",
+  "started_at": "2026-01-25T13:22:14.754645+00:00",
+  "finished_at": "2026-01-25T14:00:10.294262+00:00",
+  "inputs": {
+    "executions": {
+      "path": "/Users/alex.mcgovern/Documents/Cursor/evals_template/outputs/runs/01/01_executions.jsonl",
+      "sha256": "6013e07237a2ce11939cd43bdf22c4b23756d850ded99df7e5cefd9cdb720344",
+      "count": 20,
+      "source_path": "/Users/alex.mcgovern/Documents/Cursor/evals_template/outputs/runs/01/01_executions.jsonl"
+    },
+    "prompts": {
+      "system": {
+        "path": "/Users/alex.mcgovern/Documents/Cursor/evals_template/outputs/runs/01/01_system_prompt.md",
+        "sha256": "2041b93d50716991846a178962fbfe27cd52c5783caf4044d8a7bf0d3eb5eabd"
+      },
+      "user": {
+        "path": "/Users/alex.mcgovern/Documents/Cursor/evals_template/outputs/runs/01/01_user_prompt.md",
+        "sha256": "5631ced253e3c57b3674215e698aa39f81261ab2c818a639998cda2654844c79"
+      }
+    },
+    "evals": {
+      "path": "/Users/alex.mcgovern/Documents/Cursor/evals_template/outputs/runs/01/01_Evals.json",
+      "sha256": "6f6e80b5699eb9da2af42d2e391ad3926e66a18f403dcfe29a2cc8aa9d516c6f",
+      "models": [
+        {
+          "eval_name": "Numerical fidelity",
+          "model": "gpt-4o-mini"
+        },
+        {
+          "eval_name": "Structure & formatting",
+          "model": "gpt-4o-mini"
+        },
+        {
+          "eval_name": "News grounding & linkage",
+          "model": "gpt-4o-mini"
+        },
+        {
+          "eval_name": "Tone, compliance & insight quality",
+          "model": "gpt-4o-mini"
+        }
+      ]
+    }
+  },
+  "summary": {
+    "Numerical fidelity": {
+      "avg_score": 9.0,
+      "pass_rate": 0.9
+    },
+    "Structure & formatting": {
+      "avg_score": 9.3,
+      "pass_rate": 0.95
+    },
+    "News grounding & linkage": {
+      "avg_score": 9.2,
+      "pass_rate": 1.0
+    },
+    "Tone, compliance & insight quality": {
+      "avg_score": 7.95,
+      "pass_rate": 0.85
+    }
+  }
+}

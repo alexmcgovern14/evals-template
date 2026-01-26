@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evals dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Dark mode (Claude dark) - default */
+            --bg-primary: #1b1b1e;
+            --bg-secondary: #1f1f23;
+            --bg-tertiary: #25252a;
+            --border-color: #2a2a2f;
+            --border-hover: #34343b;
+            --text-primary: #f1f1f3;
+            --text-secondary: #c9c9d2;
+            --text-tertiary: #9b9ba6;
+            --accent: #ff5a1f;
+            --accent-hover: #ff7a4a;
+            --pass-bg: #1e2f27;
+            --pass-text: #8fe3b0;
+            --pass-border: #2b4035;
+            --fail-bg: #2f1f1f;
+            --fail-text: #ff9b7a;
+            --fail-border: #3f2a2a;
+            --highlight-bg: #3a3a42;
+            --highlight-text: #ff8b5a;
+        }
+
+        [data-theme="light"] {
+            /* Light mode (Claude light) */
+            --bg-primary: #f6f4ef;
+            --bg-secondary: #f1eee8;
+            --bg-tertiary: #e8e4dc;
+            --border-color: #ddd7cc;
+            --border-hover: #d1c9bc;
+            --text-primary: #2f2b24;
+            --text-secondary: #5a5348;
+            --text-tertiary: #7a7266;
+            --accent: #ff5a1f;
+            --accent-hover: #ff7a4a;
+            --pass-bg: #e6f3ea;
+            --pass-text: #1f7a4a;
+            --pass-border: #b9dfc6;
+            --fail-bg: #f6e4e2;
+            --fail-text: #b23b2a;
+            --fail-border: #e7b8b1;
+            --highlight-bg: #fff1e6;
+            --highlight-text: #ff5a1f;
+        }
+
+        [data-theme="light"] .filter-group select,
+        [data-theme="light"] .header-run-select {
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'><path d='M1 1L6 6L11 1' stroke='%232f2b24' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .header-toggles {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .theme-toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 6px 12px;
+        }
+
+        .toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 6px 12px;
+        }
+
+        .toggle-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            border-radius: 999px;
+            background: var(--border-color);
+            border: 1px solid var(--border-hover);
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+
+        .toggle-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: var(--text-primary);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .toggle-switch input:checked + .toggle-knob {
+            transform: translateX(20px);
+            background: var(--accent);
+        }
+
+        .theme-toggle-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .theme-toggle-icon {
+            font-size: 18px;
+        }
+
+        .theme-toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            border-radius: 999px;
+            background: var(--border-color);
+            border: 1px solid var(--border-hover);
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .theme-toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+
+        .theme-toggle-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: var(--text-primary);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .theme-toggle-switch input:checked + .theme-toggle-knob {
+            transform: translateX(20px);
+            background: var(--accent);
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 6px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-item .label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .stat-item .value {
+            font-size: 24px;
+            font-weight: 400;
+            color: var(--accent);
+            transition: color 0.3s ease;
+        }
+
+        .filters {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group input {
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            flex: 1;
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .filter-group select {
+            padding: 10px 34px 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'><path d='M1 1L6 6L11 1' stroke='%23f1f1f3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        .header-run-select {
+            min-width: 280px;
+            padding: 10px 34px 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'><path d='M1 1L6 6L11 1' stroke='%23f1f1f3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        .run-select {
+            min-width: 140px;
+        }
+
+        .meta-link {
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 13px;
+            text-decoration: none;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .meta-link:hover {
+            background: var(--border-color);
+        }
+
+        .meta-link-accent {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #ffffff;
+        }
+
+        .meta-link-accent:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        .prompt-link {
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .prompt-link:hover {
+            background: var(--border-color);
+        }
+
+
+        .table-container {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        thead th {
+            padding: 20px 15px;
+            text-align: left;
+            font-weight: 400;
+            font-size: 13px;
+            position: relative;
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .column-header span {
+            font-weight: 600;
+        }
+
+        .minimize-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .minimize-btn:hover {
+            background: var(--border-color);
+        }
+
+        .column-minimized {
+            display: none;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: var(--bg-tertiary);
+        }
+
+        tbody td {
+            padding: 20px 15px;
+            font-size: 14px;
+            vertical-align: top;
+            color: var(--text-primary);
+            transition: color 0.3s ease;
+        }
+
+        .exec-id {
+            font-weight: 400;
+            color: var(--accent);
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .identifier-value {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .identifier-subtitle {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+
+        .output-cell {
+            max-width: 500px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .output-cell b {
+            background: var(--highlight-bg);
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: var(--highlight-text);
+            font-weight: 700;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .eval-score {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .score-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 400;
+            font-size: 13px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .score-pass {
+            background: var(--pass-bg);
+            color: var(--pass-text);
+            border: 1px solid var(--pass-border);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .score-fail {
+            background: var(--fail-bg);
+            color: var(--fail-text);
+            border: 1px solid var(--fail-border);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .score-badge .icon {
+            margin-right: 4px;
+        }
+
+        .explanation {
+            color: var(--text-secondary);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-top: 8px;
+            padding: 10px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            border-left: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .explanation-toggle {
+            color: var(--accent);
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: underline;
+            margin-top: 5px;
+            display: inline-block;
+            transition: color 0.3s ease;
+        }
+
+        .explanation-toggle:hover {
+            color: var(--accent-hover);
+        }
+
+        .explanation.collapsed {
+            display: none;
+        }
+
+        .minimized-columns-control {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .minimized-columns-control span {
+            color: var(--text-secondary);
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        #minimizedColumnsList {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .restore-column-btn {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .restore-column-btn:hover {
+            background: var(--border-color);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--accent);
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+
+        @media (max-width: 1400px) {
+            .output-cell {
+                max-width: 300px;
+            }
+        }
+
+        .view-details-btn {
+            margin-top: 8px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--accent);
+            background: var(--accent);
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .view-details-btn:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            width: min(1200px, 96vw);
+            height: min(90vh, 900px);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-tertiary);
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .modal-section {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px;
+        }
+
+        .modal-section h3 {
+            font-size: 13px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .modal-output {
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .modal-output b {
+            background: var(--highlight-bg);
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: var(--highlight-text);
+        }
+
+        .modal-input {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: var(--text-primary);
+        }
+
+        .modal-evals {
+            grid-column: 1 / -1;
+        }
+
+        .modal-evals-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+        }
+
+        .prompts-modal-content {
+            width: min(1200px, 96vw);
+            height: min(90vh, 900px);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .prompts-body {
+            padding: 20px;
+            overflow: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .prompts-section {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px;
+        }
+
+        .prompts-section h3 {
+            font-size: 13px;
+            letter-spacing: 0.4px;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .prompts-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .prompts-evals {
+            grid-column: 1 / -1;
+        }
+
+        .prompts-evals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+        }
+
+        .prompts-eval-card {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+        }
+
+        .prompts-eval-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        .prompts-eval-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .prompts-eval-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .modal-eval-card {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+        }
+
+        .modal-eval-name {
+            font-weight: 400;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        .modal-eval-explanation {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            background: var(--bg-primary);
+            border-left: 1px solid var(--border-color);
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        @media (max-width: 900px) {
+            .modal-body {
+                grid-template-columns: 1fr;
+            }
+
+            .prompts-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .meta-modal-content {
+            width: min(1100px, 96vw);
+            height: min(92vh, 1000px);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .meta-body {
+            padding: 24px;
+            overflow: auto;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .meta-body h1,
+        .meta-body h2,
+        .meta-body h3 {
+            margin: 18px 0 10px;
+            font-weight: 400;
+        }
+
+        .meta-body p {
+            margin: 10px 0;
+        }
+
+        .meta-body ul,
+        .meta-body ol {
+            margin: 12px 0;
+            padding-left: 22px;
+        }
+
+        .meta-body li {
+            margin: 6px 0;
+        }
+
+        .meta-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 13px;
+        }
+
+        .meta-body th,
+        .meta-body td {
+            border: 1px solid var(--border-color);
+            padding: 8px 10px;
+            text-align: left;
+        }
+
+        .meta-body code {
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .meta-body pre {
+            background: var(--bg-primary);
+            padding: 12px;
+            border-radius: 8px;
+            overflow: auto;
+            border: 1px solid var(--border-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .meta-output-rendered {
+            background: var(--bg-primary);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin: 8px 0 14px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 900px) {
+            .header-row {
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>Evals dashboard</h1>
+                <div class="header-toggles">
+                    <div class="toggle-wrap" title="Toggle explanations">
+                        <span class="toggle-label">Show explanations</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="explanationsToggleInput" aria-label="Toggle explanations">
+                            <span class="toggle-knob"></span>
+                        </label>
+                    </div>
+                    <div class="theme-toggle-wrap" title="Toggle theme">
+                        <span class="theme-toggle-icon" id="themeIcon">🌙</span>
+                        <span class="theme-toggle-label" id="themeText">Dark</span>
+                        <label class="theme-toggle-switch">
+                            <input type="checkbox" id="themeToggleInput" aria-label="Toggle theme">
+                            <span class="theme-toggle-knob"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="header-row">
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <span class="label">Total executions:</span>
+                        <span class="value">{{ total_count }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">Eval criteria:</span>
+                        <span class="value">{{ eval_names|length }}</span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    {% if meta_analysis_url %}
+                    <a class="meta-link meta-link-accent" href="{{ meta_analysis_url }}" id="metaLink" data-meta-url="{{ meta_analysis_url }}">
+                        Meta analysis
+                    </a>
+                    {% endif %}
+                    {% if prompts_url %}
+                    <button class="prompt-link" id="promptsLink" data-prompts-url="{{ prompts_url }}" type="button">
+                        Prompts
+                    </button>
+                    {% endif %}
+                    {% if runs and active_run_id %}
+                    <select id="runSelect" class="header-run-select" title="Select eval run">
+                        {% for run in runs %}
+                        <option value="{{ run.id }}" {% if run.id == active_run_id %}selected{% endif %}>
+                            Run {{ run.id }}{% if run.results_filename %} | {{ run.results_filename }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <input type="text" id="searchInput" placeholder="{{ search_placeholder }}">
+                <select id="scoreFilter">
+                    <option value="">All scores</option>
+                    <option value="pass">✓ Passed only</option>
+                    <option value="fail">✗ Failed only</option>
+                </select>
+                <select id="criterionFilter">
+                    <option value="">All criteria</option>
+                    {% for name in eval_names %}
+                    <option value="{{ name }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="minimized-columns-control" id="minimizedColumnsControl" style="display: none;">
+            <span>Minimized columns:</span>
+            <div id="minimizedColumnsList"></div>
+        </div>
+
+        <div class="table-container">
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;" data-column="exec-id">
+                            <div class="column-header">
+                                <span>Exec id</span>
+                                <button class="minimize-btn" onclick="toggleColumn('exec-id')" title="Minimize column">−</button>
+                            </div>
+                        </th>
+                        {% for column in input_columns %}
+                        <th style="width: 140px;" data-column="{{ column.column_id }}">
+                            <div class="column-header">
+                                <span>{{ column.label }}</span>
+                                <button class="minimize-btn" onclick="toggleColumn('{{ column.column_id }}')" title="Minimize column">−</button>
+                            </div>
+                        </th>
+                        {% endfor %}
+                        <th style="width: 400px;" data-column="output">
+                            <div class="column-header">
+                                <span>Output</span>
+                                <button class="minimize-btn" onclick="toggleColumn('output')" title="Minimize column">−</button>
+                            </div>
+                        </th>
+                        {% for name in eval_names %}
+                        <th style="width: 200px;" data-column="eval-{{ loop.index0 }}">
+                            <div class="column-header">
+                                <span>{{ name }}</span>
+                                <button class="minimize-btn" onclick="toggleColumn('eval-{{ loop.index0 }}')" title="Minimize column">−</button>
+                            </div>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr class="result-row" 
+                        data-exec-id="{{ result.execution_id }}"
+                        data-identifiers="{{ result.identifier_values|join(' ')|lower }}"
+                        data-output="{{ result.output|lower }}">
+                        <td data-column="exec-id">
+                            <div class="exec-id">#{{ result.execution_id }}</div>
+                            <button class="view-details-btn" data-exec-id="{{ result.execution_id }}">Expand</button>
+                        </td>
+                        {% for column in input_columns %}
+                        <td data-column="{{ column.column_id }}">
+                            <div class="identifier-value">{{ result.input_flat.get(column.key, '') }}</div>
+                            {% if loop.first and result.overview_title %}
+                            <div class="identifier-subtitle">{{ result.overview_title }}</div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td class="output-cell" data-column="output">
+                            {{ result.output|safe }}
+                        </td>
+                        {% for eval in result.evals %}
+                        <td data-column="eval-{{ loop.index0 }}" data-criterion="{{ eval.eval_name }}" data-passed="{{ eval.passed|string|lower }}">
+                            <div class="eval-score">
+                                <span class="score-badge {{ 'score-pass' if eval.passed else 'score-fail' }}">
+                                    <span class="icon">{{ '✓' if eval.passed else '✗' }}</span>
+                                    {{ eval.score }}/{{ eval.range[1] }}
+                                </span>
+                            </div>
+                            {% if eval.explanation %}
+                            <div class="explanation">
+                                {{ eval.explanation }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detailModal" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-modal="true">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Execution details</div>
+                <button class="modal-close" id="modalCloseBtn">Close</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h3>Input</h3>
+                    <div class="modal-input" id="modalInput"></div>
+                </div>
+                <div class="modal-section">
+                    <h3>Output</h3>
+                    <div class="modal-output" id="modalOutput"></div>
+                </div>
+                <div class="modal-section modal-evals">
+                    <h3>Evals</h3>
+                    <div class="modal-evals-list" id="modalEvals"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="metaModal" aria-hidden="true">
+        <div class="meta-modal-content" role="dialog" aria-modal="true">
+            <div class="modal-header">
+                <div class="modal-title">Meta-analysis</div>
+                <button class="modal-close" id="metaCloseBtn">Close</button>
+            </div>
+            <div class="meta-body" id="metaContent"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="promptsModal" aria-hidden="true">
+        <div class="prompts-modal-content" role="dialog" aria-modal="true">
+            <div class="modal-header">
+                <div class="modal-title">Prompts</div>
+                <button class="modal-close" id="promptsCloseBtn">Close</button>
+            </div>
+            <div class="prompts-body">
+                <div class="prompts-section">
+                    <h3>System prompt</h3>
+                    <div class="prompts-text" id="systemPromptText"></div>
+                </div>
+                <div class="prompts-section">
+                    <h3>User prompt</h3>
+                    <div class="prompts-text" id="userPromptText"></div>
+                </div>
+                <div class="prompts-section prompts-evals">
+                    <h3>Evals</h3>
+                    <div class="prompts-evals-grid" id="evalsGrid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        const resultsData = {{ results | tojson }};
+        const resultsById = new Map(resultsData.map(result => [String(result.execution_id), result]));
+
+        // Search and filter functionality
+        const searchInput = document.getElementById('searchInput');
+        const criterionFilter = document.getElementById('criterionFilter');
+        const scoreFilter = document.getElementById('scoreFilter');
+        const runSelect = document.getElementById('runSelect');
+        const explanationsToggleInput = document.getElementById('explanationsToggleInput');
+        const rows = document.querySelectorAll('.result-row');
+
+        function filterRows() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const criterion = criterionFilter.value;
+            const scoreType = scoreFilter.value;
+
+            rows.forEach(row => {
+                let show = true;
+
+                // Search filter
+                if (searchTerm) {
+                    const output = row.dataset.output;
+                    const identifiers = row.dataset.identifiers || '';
+                    if (!output.includes(searchTerm) && !identifiers.includes(searchTerm)) {
+                        show = false;
+                    }
+                }
+
+                // Score filter
+                if (scoreType && show) {
+                    if (criterion) {
+                        // Filter specific criterion
+                        const cell = row.querySelector(`[data-criterion="${criterion}"]`);
+                        if (cell) {
+                            const passed = cell.dataset.passed === 'true';
+                            if (scoreType === 'pass' && !passed) show = false;
+                            if (scoreType === 'fail' && passed) show = false;
+                        }
+                    } else {
+                        // Filter across all criteria
+                        const cells = row.querySelectorAll('[data-criterion]');
+                        let hasMatch = scoreType === 'pass';
+                        cells.forEach(cell => {
+                            const passed = cell.dataset.passed === 'true';
+                            if (scoreType === 'pass' && !passed) hasMatch = false;
+                            if (scoreType === 'fail' && !passed) hasMatch = true;
+                        });
+                        if (!hasMatch) show = false;
+                    }
+                }
+
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        searchInput.addEventListener('input', filterRows);
+        criterionFilter.addEventListener('change', filterRows);
+        scoreFilter.addEventListener('change', filterRows);
+        if (runSelect) {
+            runSelect.addEventListener('change', () => {
+                const selected = runSelect.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('run', selected);
+                window.location.href = url.toString();
+            });
+        }
+
+        function applyExplanationVisibility(visible) {
+            document.querySelectorAll('.explanation').forEach((explanation) => {
+                explanation.classList.toggle('collapsed', !visible);
+            });
+            if (explanationsToggleInput) {
+                explanationsToggleInput.checked = visible;
+            }
+            localStorage.setItem('explanationsVisible', String(visible));
+        }
+
+        const storedVisibility = localStorage.getItem('explanationsVisible');
+        const explanationsVisible = storedVisibility === null ? true : storedVisibility === 'true';
+        applyExplanationVisibility(explanationsVisible);
+
+        if (explanationsToggleInput) {
+            explanationsToggleInput.addEventListener('change', () => {
+                applyExplanationVisibility(explanationsToggleInput.checked);
+            });
+        }
+
+        // Column minimization functionality
+        let minimizedColumns = JSON.parse(localStorage.getItem('minimizedColumns') || '[]');
+
+        function toggleColumn(columnId) {
+            const index = minimizedColumns.indexOf(columnId);
+            if (index > -1) {
+                minimizedColumns.splice(index, 1);
+            } else {
+                minimizedColumns.push(columnId);
+            }
+            localStorage.setItem('minimizedColumns', JSON.stringify(minimizedColumns));
+            updateColumnVisibility();
+        }
+
+        function updateColumnVisibility() {
+            // Hide/show header cells
+            document.querySelectorAll('thead th[data-column]').forEach((th) => {
+                const columnId = th.dataset.column;
+                if (minimizedColumns.includes(columnId)) {
+                    th.classList.add('column-minimized');
+                } else {
+                    th.classList.remove('column-minimized');
+                }
+            });
+
+            // Hide/show body cells
+            document.querySelectorAll('tbody td[data-column]').forEach(td => {
+                const columnId = td.dataset.column;
+                if (minimizedColumns.includes(columnId)) {
+                    td.classList.add('column-minimized');
+                } else {
+                    td.classList.remove('column-minimized');
+                }
+            });
+
+            // Update minimized columns control
+            updateMinimizedColumnsControl();
+        }
+
+        function updateMinimizedColumnsControl() {
+            const control = document.getElementById('minimizedColumnsControl');
+            const list = document.getElementById('minimizedColumnsList');
+            
+            if (minimizedColumns.length === 0) {
+                control.style.display = 'none';
+                return;
+            }
+
+            control.style.display = 'flex';
+            list.innerHTML = '';
+
+            minimizedColumns.forEach(columnId => {
+                const columnName = getColumnName(columnId);
+                const btn = document.createElement('button');
+                btn.className = 'restore-column-btn';
+                btn.textContent = `Restore ${columnName}`;
+                btn.onclick = () => toggleColumn(columnId);
+                list.appendChild(btn);
+            });
+        }
+
+        function getColumnName(columnId) {
+            const nameMap = {
+                'exec-id': 'Exec id',
+                'output': 'Output'
+            };
+            
+            if (nameMap[columnId]) {
+                return nameMap[columnId];
+            }
+            
+            // For eval columns, get the name from the header
+            const header = document.querySelector(`thead th[data-column="${columnId}"]`);
+            if (header) {
+                const span = header.querySelector('.column-header span');
+                if (span) {
+                    return span.textContent;
+                }
+            }
+            
+            return columnId;
+        }
+
+        // Theme toggle functionality
+        function setTheme(theme) {
+            const html = document.documentElement;
+            html.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            updateThemeUI(theme);
+        }
+
+        function updateThemeUI(theme) {
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            const toggleInput = document.getElementById('themeToggleInput');
+            
+            if (theme === 'light') {
+                icon.textContent = '☀️';
+                text.textContent = 'Light';
+                if (toggleInput) toggleInput.checked = true;
+            } else {
+                icon.textContent = '🌙';
+                text.textContent = 'Dark';
+                if (toggleInput) toggleInput.checked = false;
+            }
+        }
+
+        // Initialize theme on page load
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+            const toggleInput = document.getElementById('themeToggleInput');
+            if (toggleInput) {
+                toggleInput.addEventListener('change', () => {
+                    setTheme(toggleInput.checked ? 'light' : 'dark');
+                });
+            }
+        }
+
+        // Initialize column visibility and theme on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            updateColumnVisibility();
+        });
+
+        // Modal functionality
+        const detailModal = document.getElementById('detailModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalInput = document.getElementById('modalInput');
+        const modalOutput = document.getElementById('modalOutput');
+        const modalEvals = document.getElementById('modalEvals');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        function openDetails(execId) {
+            const result = resultsById.get(String(execId));
+            if (!result) return;
+
+            modalTitle.textContent = `Execution #${result.execution_id}`;
+            modalInput.textContent = JSON.stringify(result.input, null, 2);
+            modalOutput.innerHTML = result.output || '';
+
+            modalEvals.innerHTML = '';
+            result.evals.forEach((evalResult) => {
+                const card = document.createElement('div');
+                card.className = 'modal-eval-card';
+
+                const name = document.createElement('div');
+                name.className = 'modal-eval-name';
+                name.textContent = evalResult.eval_name;
+
+                const score = document.createElement('span');
+                score.className = `score-badge ${evalResult.passed ? 'score-pass' : 'score-fail'}`;
+                score.textContent = `${evalResult.score}/${evalResult.range[1]}`;
+
+                const scoreWrap = document.createElement('div');
+                scoreWrap.className = 'eval-score';
+                scoreWrap.appendChild(score);
+
+                card.appendChild(name);
+                card.appendChild(scoreWrap);
+
+                if (evalResult.explanation) {
+                    const explanation = document.createElement('div');
+                    explanation.className = 'modal-eval-explanation';
+                    explanation.textContent = evalResult.explanation;
+                    card.appendChild(explanation);
+                }
+
+                modalEvals.appendChild(card);
+            });
+
+            detailModal.classList.add('active');
+            detailModal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeDetails() {
+            detailModal.classList.remove('active');
+            detailModal.setAttribute('aria-hidden', 'true');
+        }
+
+        document.querySelectorAll('.view-details-btn').forEach((btn) => {
+            btn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                openDetails(btn.dataset.execId);
+            });
+        });
+
+        modalCloseBtn.addEventListener('click', closeDetails);
+        detailModal.addEventListener('click', (event) => {
+            if (event.target === detailModal) {
+                closeDetails();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && detailModal.classList.contains('active')) {
+                closeDetails();
+            }
+        });
+
+        // Meta-analysis modal
+        const metaLink = document.getElementById('metaLink');
+        const metaModal = document.getElementById('metaModal');
+        const metaCloseBtn = document.getElementById('metaCloseBtn');
+        const metaContent = document.getElementById('metaContent');
+        const promptsLink = document.getElementById('promptsLink');
+        const promptsModal = document.getElementById('promptsModal');
+        const promptsCloseBtn = document.getElementById('promptsCloseBtn');
+        const systemPromptText = document.getElementById('systemPromptText');
+        const userPromptText = document.getElementById('userPromptText');
+        const evalsGrid = document.getElementById('evalsGrid');
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        async function openMetaAnalysis() {
+            if (!metaLink) return;
+            const url = metaLink.dataset.metaUrl || metaLink.href;
+            metaModal.classList.add('active');
+            metaModal.setAttribute('aria-hidden', 'false');
+            metaContent.textContent = 'Loading meta-analysis...';
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Meta-analysis fetch failed: ${response.status}`);
+                }
+                const text = await response.text();
+                if (window.marked) {
+                    const renderer = new window.marked.Renderer();
+                    renderer.code = (code) => {
+                        const raw = typeof code === 'string'
+                            ? code
+                            : (code && (code.text || code.raw || code.code) ? (code.text || code.raw || code.code) : '');
+                        if (raw.includes('<b>') || raw.includes('<strong>')) {
+                            return `<div class="meta-output-rendered">${raw}</div>`;
+                        }
+                        return `<pre><code>${escapeHtml(raw)}</code></pre>`;
+                    };
+                    try {
+                        metaContent.innerHTML = window.marked.parse(text, { renderer });
+                    } catch (parseError) {
+                        metaContent.textContent = text;
+                    }
+                } else {
+                    metaContent.textContent = text;
+                }
+            } catch (error) {
+                metaContent.textContent = 'Unable to load meta-analysis. Please try again.';
+            }
+        }
+
+        async function openPrompts() {
+            if (!promptsLink) return;
+            const url = promptsLink.dataset.promptsUrl;
+            if (!url) return;
+            promptsModal.classList.add('active');
+            promptsModal.setAttribute('aria-hidden', 'false');
+            systemPromptText.textContent = 'Loading...';
+            userPromptText.textContent = '';
+            evalsGrid.innerHTML = '';
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Prompts fetch failed: ${response.status}`);
+                }
+                const data = await response.json();
+                systemPromptText.textContent = data.system_prompt || '';
+                userPromptText.textContent = data.user_prompt || '';
+                if (Array.isArray(data.evals)) {
+                    data.evals.forEach((evalItem) => {
+                        const card = document.createElement('div');
+                        card.className = 'prompts-eval-card';
+
+                        const name = document.createElement('div');
+                        name.className = 'prompts-eval-name';
+                        name.textContent = evalItem.name || 'Unnamed eval';
+
+                        const meta = document.createElement('div');
+                        meta.className = 'prompts-eval-meta';
+                        const range = Array.isArray(evalItem.range) ? `${evalItem.range[0]}–${evalItem.range[1]}` : '';
+                        meta.textContent = `Model: ${evalItem.model || 'n/a'} · Pass: ${evalItem.pass_threshold ?? 'n/a'} · Range: ${range}`;
+
+                        const prompt = document.createElement('div');
+                        prompt.className = 'prompts-eval-text';
+                        if (Array.isArray(evalItem.input)) {
+                            prompt.textContent = evalItem.input.map(item => item.content).join('\n\n');
+                        } else {
+                            prompt.textContent = '';
+                        }
+
+                        card.appendChild(name);
+                        card.appendChild(meta);
+                        card.appendChild(prompt);
+                        evalsGrid.appendChild(card);
+                    });
+                }
+            } catch (error) {
+                systemPromptText.textContent = 'Unable to load prompts. Please try again.';
+            }
+        }
+
+        function closePrompts() {
+            promptsModal.classList.remove('active');
+            promptsModal.setAttribute('aria-hidden', 'true');
+        }
+
+        function closeMetaAnalysis() {
+            metaModal.classList.remove('active');
+            metaModal.setAttribute('aria-hidden', 'true');
+        }
+
+        if (metaLink) {
+            metaLink.addEventListener('click', (event) => {
+                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                    return;
+                }
+                event.preventDefault();
+                openMetaAnalysis();
+            });
+        }
+
+        if (promptsLink) {
+            promptsLink.addEventListener('click', () => {
+                openPrompts();
+            });
+        }
+
+        metaCloseBtn.addEventListener('click', closeMetaAnalysis);
+        metaModal.addEventListener('click', (event) => {
+            if (event.target === metaModal) {
+                closeMetaAnalysis();
+            }
+        });
+
+        promptsCloseBtn.addEventListener('click', closePrompts);
+        promptsModal.addEventListener('click', (event) => {
+            if (event.target === promptsModal) {
+                closePrompts();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && metaModal.classList.contains('active')) {
+                closeMetaAnalysis();
+            }
+            if (event.key === 'Escape' && promptsModal.classList.contains('active')) {
+                closePrompts();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+[
+  {
+    "id": "Numerical fidelity-portfolio-weekly-8d2f9c1a-3a2d-4d07-9a24-2b1b7f9d7c51",
+    "type": "score_model",
+    "grdr_id": null,
+    "inactive_at": null,
+    "input": [
+      {
+        "type": "message",
+        "role": "developer",
+        "content": "Score the briefing out of 10 for numerical fidelity against the provided input data. Check that portfolio change, starting/ending values, benchmark change, and top contributor contribution values match the input (allow normal rounding to 2dp). Deduct points for any invented numbers, changed signs, or incorrect ordering of contributors by absolute contribution. 1–3=many numerical errors or invented figures; 4–6=some errors/mismatches; 7–9=mostly correct with minor rounding/ordering issues; 10=perfect match. Output JSON with keys: result (integer 0–10) and explanation (brief 2–4 sentence justification). <input>{{item.input}}</input> <output>{{item.output}}</output>"
+      },
+      {
+        "type": "message",
+        "role": "user",
+        "content": "**User input**\n\n{{item.input}}\n\n**Response to evaluate**\n\n{{item.output}}"
+      }
+    ],
+    "model": "gpt-4o-mini",
+    "name": "Numerical fidelity",
+    "pass_threshold": 8,
+    "range": [
+      0,
+      10
+    ],
+    "sampling_params": null
+  },
+  {
+    "id": "Structure & formatting-portfolio-weekly-0c1f6a2b-0b5f-4a7f-8d0a-7a8a5f0d2b7a",
+    "type": "score_model",
+    "grdr_id": null,
+    "inactive_at": null,
+    "input": [
+      {
+        "type": "message",
+        "role": "developer",
+        "content": "Score the briefing out of 10 for strict structural compliance. It must contain exactly these sections in this order: WEEKLY PORTFOLIO SNAPSHOT (with Period line), PERFORMANCE (4 bullets), TOP CONTRIBUTORS (numbered list), MARKET CONTEXT (2 bullets), SUMMARY INSIGHT (exactly one paragraph; 60–90 words; no bullets). 1–3=many missing/misordered sections or formatting violations; 4–6=some deviations; 7–9=mostly compliant with minor issues; 10=perfect compliance. Output JSON with keys: result (integer 0–10) and explanation (brief 2–4 sentence justification). <output>{{item.output}}</output>"
+      },
+      {
+        "type": "message",
+        "role": "user",
+        "content": "**User input**\n\n{{item.input}}\n\n**Response to evaluate**\n\n{{item.output}}"
+      }
+    ],
+    "model": "gpt-4o-mini",
+    "name": "Structure & formatting",
+    "pass_threshold": 8,
+    "range": [
+      0,
+      10
+    ],
+    "sampling_params": null
+  },
+  {
+    "id": "News grounding & linkage-portfolio-weekly-7e3c6bdf-2b59-4c60-a2a8-0bcb3d9d9f1a",
+    "type": "score_model",
+    "grdr_id": null,
+    "inactive_at": null,
+    "input": [
+      {
+        "type": "message",
+        "role": "developer",
+        "content": "Score the briefing out of 10 for grounding in the provided news_digest and correct linkage. The response must only reference information contained in news_digest summaries and must not attribute an article’s content to holdings not in that article’s linked_holdings. Deduct points for hallucinated events, invented articles, or mismatched attribution. Also reward prioritising high-confidence news linked to major contributors. 1–3=clear hallucinations or incorrect linkage; 4–6=some ungrounded claims or weak linkage; 7–9=well grounded with minor overreach; 10=perfectly grounded and correctly linked. Output JSON with keys: result (integer 0–10) and explanation (brief 2–4 sentence justification). <input>{{item.input}}</input> <output>{{item.output}}</output>"
+      },
+      {
+        "type": "message",
+        "role": "user",
+        "content": "**User input**\n\n{{item.input}}\n\n**Response to evaluate**\n\n{{item.output}}"
+      }
+    ],
+    "model": "gpt-4o-mini",
+    "name": "News grounding & linkage",
+    "pass_threshold": 8,
+    "range": [
+      0,
+      10
+    ],
+    "sampling_params": null
+  },
+  {
+    "id": "Tone, compliance & insight quality-portfolio-weekly-2f6f2c5c-8f7f-4c8d-b1b6-0d7c7a2f1a66",
+    "type": "score_model",
+    "grdr_id": null,
+    "inactive_at": null,
+    "input": [
+      {
+        "type": "message",
+        "role": "developer",
+        "content": "Score the briefing out of 10 for tone, compliance, and insight quality. It must be neutral, explanatory, and non-advisory: no buy/sell/hold language, no calls to action, no predictions. The SUMMARY INSIGHT should add interpretation (drivers, comparison to benchmark, relation to market context) without merely restating numbers. 1–3=advisory/predictive or low-quality insight; 4–6=some compliance or clarity issues; 7–9=strong tone and useful insight with minor lapses; 10=excellent, compliant, and genuinely insightful. Output JSON with keys: result (integer 0–10) and explanation (brief 2–4 sentence justification). <output>{{item.output}}</output>"
+      },
+      {
+        "type": "message",
+        "role": "user",
+        "content": "**User input**\n\n{{item.input}}\n\n**Response to evaluate**\n\n{{item.output}}"
+      }
+    ],
+    "model": "gpt-4o-mini",
+    "name": "Tone, compliance & insight quality",
+    "pass_threshold": 8,
+    "range": [
+      0,
+      10
+    ],
+    "sampling_params": null
+  }
+]
