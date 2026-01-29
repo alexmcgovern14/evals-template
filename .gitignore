@@ -42,8 +42,9 @@ nohup.out
 *.swo
 *~
 
+# Local drafts
+substack_linkedin.md
+
 # Project specific
-data/raw/*.jsonl
-!data/raw/.gitkeep
-data/incoming/*.jsonl
-!data/incoming/.gitkeep
+data/raw/
+data/incoming/
